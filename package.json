@@ -1,8 +1,9 @@
 {
-  "devDependencies": {
-    "@antithesishq/bombadil": "^0.3.2"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/odysseus-dev/odysseus.git"
   },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.98.0"
+  "devDependencies": {
+    "@antithesishq/bombadil": "^0.6.1"
   }
 }

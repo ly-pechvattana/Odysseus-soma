@@ -14,8 +14,13 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Optional
 
-from .database import Session as DbSession, ChatMessage as DbChatMessage, Document as DbDocument, SessionLocal
+from .database import Session as DbSession, ChatMessage as DbChatMessage, Document as DbDocument, SessionLocal, utcnow_naive
 from .models import Session, ChatMessage
+from src.attachment_refs import persistable_message_content
+from src.upload_handler import reserve_message_upload_references
+
+# Re-export singleton accessors from models for convenience
+from .models import set_session_manager_instance, get_session_manager_instance
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +34,35 @@ def _message_timestamp_iso(value: Optional[datetime]) -> Optional[str]:
     return value.isoformat().replace("+00:00", "Z")
 
 
+<<<<<<< HEAD
+=======
+def _parse_msg_content(raw):
+    """Parse message content from DB — deserialises JSON arrays back to lists
+    (multimodal content with image/audio attachments)."""
+    if isinstance(raw, list):
+        return raw
+    if isinstance(raw, str) and raw.startswith('[{') and '"type"' in raw:
+        try:
+            parsed = json.loads(raw)
+            # Only treat as serialized multimodal content when EVERY element is
+            # a dict whose "type" is a recognized content-block kind. Otherwise a
+            # plain text message that merely *looks* like a JSON array of objects
+            # (e.g. a user pasting an API schema/sample with a "type" field) was
+            # silently parsed back into a list, destroying the original string.
+            _BLOCK_TYPES = {
+                "text", "image", "image_url", "audio", "input_audio",
+                "input_image", "document", "file",
+            }
+            if (isinstance(parsed, list) and parsed
+                    and all(isinstance(p, dict) and p.get("type") in _BLOCK_TYPES
+                            for p in parsed)):
+                return parsed
+        except (json.JSONDecodeError, ValueError):
+            pass
+    return raw
+
+
+>>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
 class SessionManager:
     """
     Manages chat sessions with database persistence.
@@ -43,6 +77,7 @@ class SessionManager:
     def __init__(self, sessions_file: str = None):
         # sessions_file kept for backward compat, not used
         self.sessions: Dict[str, Session] = {}
+        self.upload_handler = None
         self.load_sessions()
 
     # ------------------------------------------------------------------
@@ -119,7 +154,7 @@ class SessionManager:
                 meta.setdefault('timestamp', _message_timestamp_iso(db_msg.timestamp))
                 history.append(ChatMessage(
                     role=db_msg.role,
-                    content=db_msg.content,
+                    content=_parse_msg_content(db_msg.content),
                     metadata=meta,
                 ))
         else:
@@ -134,7 +169,7 @@ class SessionManager:
                 meta.setdefault('timestamp', _message_timestamp_iso(db_msg.timestamp))
                 history.append(ChatMessage(
                     role=db_msg.role,
-                    content=db_msg.content,
+                    content=_parse_msg_content(db_msg.content),
                     metadata=meta,
                 ))
 
@@ -173,12 +208,17 @@ class SessionManager:
         """
         Add a message to a session and persist to database.
 
+        Updates the authoritative history list and persists through this
+        manager directly so tests and temporary managers do not depend on the
+        process-wide session-manager singleton.
+
         Args:
             session_id: Session ID
             message: ChatMessage to add
         """
         session = self.get_session(session_id)
         session.history.append(message)
+        session._history = session.history
         session.message_count = len(session.history)
 
         self._persist_message(session_id, message)
@@ -187,30 +227,62 @@ class SessionManager:
         """Persist a single message to the database."""
         db = SessionLocal()
         try:
+            db_session = db.query(DbSession).filter(DbSession.id == session_id).first()
+            if db_session is None:
+                # A stream/tool callback can outlive a session delete. Do not
+                # create a chat_messages row with no parent session; also drop
+                # any stale cached session so later writes fail closed too.
+                self.sessions.pop(session_id, None)
+                logger.warning("Dropping message for deleted session %s", session_id)
+                return
+
+            missing_upload_id = reserve_message_upload_references(
+                getattr(self, "upload_handler", None),
+                getattr(db_session, "owner", None),
+                message.content,
+                message.metadata,
+            )
+            if missing_upload_id:
+                raise ValueError(
+                    f"Referenced upload is no longer available: {missing_upload_id}"
+                )
+
             msg_id = str(uuid.uuid4())
             msg_time = datetime.utcnow()
             if message.metadata is None:
                 message.metadata = {}
             message.metadata.setdefault('timestamp', _message_timestamp_iso(msg_time))
+<<<<<<< HEAD
+=======
+            # Multimodal content may contain provider data URLs for the live
+            # model call. Persist only readable text plus attachment references
+            # so chat_messages/FTS do not duplicate upload bytes.
+            _content = persistable_message_content(message.content, message.metadata)
+>>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
             db_message = DbChatMessage(
                 id=msg_id,
                 session_id=session_id,
                 role=message.role,
+<<<<<<< HEAD
                 content=message.content,
+=======
+                content=_content,
+>>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
                 meta_data=json.dumps(message.metadata) if message.metadata else None,
                 timestamp=msg_time,
             )
             db.add(db_message)
 
-            db_session = db.query(DbSession).filter(DbSession.id == session_id).first()
-            if db_session:
-                db_session.message_count = len(self.sessions.get(session_id, {}).history) if session_id in self.sessions else 0
-                _now = datetime.now(timezone.utc)
-                db_session.last_accessed = _now
-                # Clean "last conversation" timestamp — only bumped here on a
-                # real message persist, so it powers an accurate "Last active"
-                # sort that ignores renames / model swaps / mere opens.
-                db_session.last_message_at = _now
+            if session_id in self.sessions:
+                db_session.message_count = len(self.sessions[session_id].history)
+            else:
+                db_session.message_count = 0
+            _now = datetime.now(timezone.utc)
+            db_session.last_accessed = _now
+            # Clean "last conversation" timestamp — only bumped here on a
+            # real message persist, so it powers an accurate "Last active"
+            # sort that ignores renames / model swaps / mere opens.
+            db_session.last_message_at = _now
 
             db.commit()
 
@@ -245,13 +317,17 @@ class SessionManager:
 
             db_session = db.query(DbSession).filter(DbSession.id == session_id).first()
             if db_session:
-                db_session.message_count = keep_count
+                # keep_count can exceed the real message total (e.g. the AI tool
+                # defaults to keep_count=10 on a short session); message_count must
+                # track the rows that actually remain, not the requested cap.
+                db_session.message_count = min(keep_count, len(db_messages))
                 db_session.updated_at = datetime.now(timezone.utc)
 
             db.commit()
 
             # Update in-memory
             session.history = session.history[:keep_count]
+            session._history = session.history
 
             logger.info(f"Truncated session {session_id} to {keep_count} messages")
             return True
@@ -268,6 +344,28 @@ class SessionManager:
         session = self.get_session(session_id)
         db = SessionLocal()
         try:
+            db_session = db.query(DbSession).filter(DbSession.id == session_id).first()
+            if db_session is None:
+                logger.warning("Cannot replace history for missing session %s", session_id)
+                return False
+
+            # Reserve every incoming attachment before removing any durable
+            # message row. reserve_upload() shares the upload lifecycle lock
+            # with cleanup, so an upload cannot be deleted between this
+            # ownership check/access touch and the replacement transaction.
+            # A failed reservation must leave the existing transcript intact.
+            for message in messages:
+                missing_upload_id = reserve_message_upload_references(
+                    getattr(self, "upload_handler", None),
+                    getattr(db_session, "owner", None),
+                    message.content,
+                    message.metadata,
+                )
+                if missing_upload_id:
+                    raise ValueError(
+                        f"Referenced upload is no longer available: {missing_upload_id}"
+                    )
+
             db.query(DbChatMessage).filter(DbChatMessage.session_id == session_id).delete()
             now = datetime.now(timezone.utc)
             for i, message in enumerate(messages):
@@ -276,7 +374,9 @@ class SessionManager:
                     id=msg_id,
                     session_id=session_id,
                     role=message.role,
-                    content=message.content,
+                    # Mirrors _persist_message: keep raw media bytes out of the
+                    # persisted transcript and search index.
+                    content=persistable_message_content(message.content, message.metadata),
                     meta_data=json.dumps(message.metadata) if message.metadata else None,
                     timestamp=now + timedelta(microseconds=i),
                 )
@@ -285,15 +385,14 @@ class SessionManager:
                     message.metadata = {}
                 message.metadata["_db_id"] = msg_id
 
-            db_session = db.query(DbSession).filter(DbSession.id == session_id).first()
-            if db_session:
-                db_session.message_count = len(messages)
-                db_session.updated_at = now
-                db_session.last_accessed = now
-                db_session.last_message_at = now
+            db_session.message_count = len(messages)
+            db_session.updated_at = now
+            db_session.last_accessed = now
+            db_session.last_message_at = now
 
             db.commit()
             session.history = list(messages)
+            session._history = session.history
             session.message_count = len(messages)
             logger.info("Replaced session %s history with %d messages", session_id, len(messages))
             return True
@@ -454,6 +553,12 @@ class SessionManager:
         """Permanently delete a session and all its messages."""
         db = SessionLocal()
         try:
+            try:
+                from src.session_image_cleanup import cleanup_session_images
+                cleanup_session_images(session_id, db=db)
+            except Exception as e:
+                logger.warning(f"Image cleanup failed while deleting session {session_id}: {e}")
+
             # Detach documents so they survive as orphans in the library
             db.query(DbDocument).filter(DbDocument.session_id == session_id).update(
                 {DbDocument.session_id: None}, synchronize_session=False
@@ -466,11 +571,17 @@ class SessionManager:
             db_session = db.query(DbSession).filter(DbSession.id == session_id).first()
             if db_session:
                 db.delete(db_session)
+
+            # Drop the in-memory copy even when there is no DB row. A "ghost"
+            # session lives only here (never persisted, or its row was removed
+            # out-of-band); without this it can never be cleared and keeps
+            # 404ing on every operation (issue #1044).
+            removed_in_memory = self.sessions.pop(session_id, None) is not None
+
+            if db_session or removed_in_memory:
+                # Commit the document-detach / message-delete above (a no-op when
+                # the ghost had no rows) together with the session delete.
                 db.commit()
-
-                if session_id in self.sessions:
-                    del self.sessions[session_id]
-
                 logger.info(f"Deleted session {session_id}")
                 return True
             return False
@@ -563,24 +674,52 @@ class SessionManager:
     def save_sessions(self):
         """No-op for DB compatibility."""
 
+    def ensure_task_session(self, session_id: str, name: str, endpoint_url: str, model: str, owner: str = None, task: object = None) -> Session:
+        """Create a task session if it doesn't exist, or return the existing one.
+
+        Unlike create_session, this checks the cache first and does NOT
+        overwrite an existing in-memory session. The task scheduler must
+        use this instead of direct dict assignment.
+        """
+        if session_id in self.sessions:
+            return self.sessions[session_id]
+
+        session = self.create_session(session_id, name, endpoint_url, model, owner=owner)
+        if task is not None:
+            task.session_id = session_id
+        return session
+
     # ------------------------------------------------------------------
     # Cleanup
     # ------------------------------------------------------------------
 
-    def cleanup_empty_sessions(self, auto_archive_days: int = 30) -> dict:
-        """Clean up empty and old sessions."""
+    def cleanup_empty_sessions(self, auto_archive_days: int = 30, min_age_hours: int = 1) -> dict:
+        """Clean up empty and old sessions.
+
+        Args:
+            auto_archive_days: Age in days before non-important sessions are archived.
+            min_age_hours: Minimum age in hours before an empty session can be deleted.
+                          Prevents deleting sessions that were just created.
+        """
         db = SessionLocal()
         stats = {'deleted_empty': 0, 'archived_old': 0, 'total_checked': 0}
 
         try:
             all_sessions = db.query(DbSession).all()
-            cutoff_date = datetime.now(timezone.utc) - timedelta(days=auto_archive_days)
+            cutoff_date = utcnow_naive() - timedelta(days=auto_archive_days)
+            min_age = utcnow_naive() - timedelta(hours=min_age_hours)
 
             for db_session in all_sessions:
                 stats['total_checked'] += 1
 
-                # Delete empty sessions
+                # Delete empty sessions only if older than min_age_hours
                 if db_session.message_count == 0:
+                    if db_session.created_at is not None:
+                        created = db_session.created_at
+                        if created.tzinfo is None:
+                            created = created.replace(tzinfo=timezone.utc)
+                        if created > min_age:
+                            continue  # Too young to delete
                     if db_session.id in self.sessions:
                         del self.sessions[db_session.id]
                     db.delete(db_session)
