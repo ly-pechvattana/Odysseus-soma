@@ -14,7 +14,7 @@ import chatModule from './js/chat.js?v=20260722ctxheader4';
 import compareModule from './js/compare/index.js?v=20260723compareicon2';
 import documentModule from './js/document.js?v=20260722emailfastindex1';
 import searchChatModule from './js/search-chat.js';
-import { makeWindowDraggable } from './js/windowDrag.js';
+import { makeWindowDraggable } from './js/windowDrag.js?v=20260801closefix';
 import markdownModule from './js/markdown.js';
 import chatRenderer from './js/chatRenderer.js?v=20260722emailfastindex1';
 import sessionModule from './js/sessions.js?v=20260722ctxheader4';
@@ -28,7 +28,7 @@ import notesModule from './js/notes.js';
 import adminModule from './js/admin.js?v=20260716openrouter3';
 import settingsModule from './js/settings.js?v=20260722emailfastindex1';
 // Eagerly bind unified minimize/restore behavior across all tool modals.
-import './js/modalManager.js?v=20260723compareicon2';
+import './js/modalManager.js?v=20260801soma6';
 // Desktop window tiling — drag a modal near an edge/corner to snap.
 import './js/tileManager.js';
 import themeModule from './js/theme.js';
@@ -1010,7 +1010,7 @@ function initializeEventListeners() {
     toolCookbookBtn.addEventListener('click', async () => {
       if (!cookbookModule) return;
       // Try minimized→restore or open→minimize via the manager first
-      const Modals = await import('./js/modalManager.js');
+      const Modals = await import('./js/modalManager.js?v=20260801soma6');
       if (!Modals.toggle('cookbook-modal')) {
         // Not registered yet → fresh open
         cookbookModule.open();
@@ -1038,7 +1038,7 @@ function initializeEventListeners() {
   if (toolGalleryBtn) {
     toolGalleryBtn.addEventListener('click', async () => {
       if (!galleryModule) return;
-      const Modals = await import('./js/modalManager.js');
+      const Modals = await import('./js/modalManager.js?v=20260801soma6');
       if (!Modals.toggle('gallery-modal')) {
         if (galleryModule.isGalleryOpen()) galleryModule.closeGallery();
         else galleryModule.openGallery();
@@ -1067,7 +1067,7 @@ function initializeEventListeners() {
   if (toolCalendarBtn) {
     toolCalendarBtn.addEventListener('click', async () => {
       if (!calendarModule) return;
-      const Modals = await import('./js/modalManager.js');
+      const Modals = await import('./js/modalManager.js?v=20260801soma6');
       // toggle returns true when a registered modal was minimized/restored;
       // returns false when nothing is registered → open fresh.
       if (!Modals.toggle('calendar-modal')) {
@@ -1200,16 +1200,6 @@ function initializeEventListeners() {
       // Just add the class — the CSS rule for .email-lib-fullscreen .modal-content
       // owns all the positioning (with !important so it beats openEmailLibrary's
       // post-mount centering rAF) and reads the rail width from --icon-rail-w.
-      const _goFullscreen = () => {
-        const modal = document.getElementById('email-lib-modal');
-        if (!modal) return false;
-        modal.classList.add('email-lib-fullscreen');
-        return true;
-      };
-      _goFullscreen();
-      requestAnimationFrame(_goFullscreen);
-      setTimeout(_goFullscreen, 50);
-      setTimeout(_goFullscreen, 200);
     },
     '/memory':   () => document.getElementById('tool-memory-btn')?.click(),
     '/gallery':  () => document.getElementById('tool-gallery-btn')?.click(),

@@ -14,8 +14,11 @@ export function initSectionCollapse(Storage) {
     const section = header.closest('.section');
     if (!section || !section.id) return;
 
-    // Skip email section — it doesn't collapse (title opens popup instead)
-    if (section.id === 'email-section') return;
+    // Skip tool-launch sections — their title rows open the tool instead of
+    // toggling sidebar collapse. Email already follows the same rule.
+    if (section.id === 'email-section'
+        || section.id === 'tool-calendar-btn'
+        || section.id === 'tool-notes-btn') return;
 
     // Add chevron (always visible — rotates when collapsed)
     header.insertAdjacentHTML('beforeend', _chevronHtml);

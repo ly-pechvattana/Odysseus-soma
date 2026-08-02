@@ -12,27 +12,7 @@ import httpx
 import pytest
 from fastapi import HTTPException
 
-<<<<<<< HEAD
-_endpoint_resolver = sys.modules.get("src.endpoint_resolver")
-if _endpoint_resolver is not None and not getattr(_endpoint_resolver, "__file__", None):
-    # Other tests stub this module during collection. These helper tests need
-    # the real URL normalization helpers so Anthropic /v1 handling is covered.
-    sys.modules.pop("src.endpoint_resolver", None)
-    sys.modules.pop("routes.model_routes", None)
-
-if "core.database" not in sys.modules:
-    _core_db = types.ModuleType("core.database")
-    for _name in [
-        "SessionLocal", "ModelEndpoint", "Session", "ChatMessage", "Document",
-        "DocumentVersion", "GalleryImage", "GalleryAlbum", "Note",
-        "CalendarCal", "CalendarEvent", "ScheduledTask", "TaskRun",
-        "McpServer",
-    ]:
-        setattr(_core_db, _name, MagicMock())
-    sys.modules["core.database"] = _core_db
-=======
 from tests.helpers.import_state import clear_fake_endpoint_resolver_modules, preserve_import_state
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
 
 with preserve_import_state("core.database", "src.database", "core.session_manager", "routes.model_routes"):
     # Other tests stub this module during collection. These helper tests need

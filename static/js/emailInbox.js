@@ -6,7 +6,7 @@
 import spinnerModule from './spinner.js';
 import sessionModule from './sessions.js';
 import { initEmailLibrary, openEmailLibrary, closeEmailLibrary, isOpen as isLibOpen, prewarmEmailLibrary, prewarmUnreadEmails } from './emailLibrary.js?v=20260722emailfastindex1';
-import * as Modals from './modalManager.js';
+import * as Modals from './modalManager.js?v=20260801soma6';
 import { applyEdgeDock } from './modalSnap.js';
 import { buildReplyAllCc, extractEmail } from './emailLibrary/replyRecipients.js';
 import { emailApiUrl, emailAccountQuery } from './emailShared.js';
@@ -258,8 +258,25 @@ function _watchDocOpenToReDockEmail() {
   _docOpenObs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 }
 
+// Keep the inbox in the workspace's right-hand tool column, matching Notes.
+// Retry briefly while the library mounts and its content sizing settles.
+function _dockEmailLibraryRight() {
+  if (window.innerWidth <= 768) return;
+  const dock = () => {
+    const modal = document.getElementById('email-lib-modal');
+    if (!modal || modal.classList.contains('hidden')) return false;
+    modal.classList.remove('email-lib-fullscreen', 'modal-left-docked');
+    try { applyEdgeDock(modal, 'right'); } catch (_) {}
+    return true;
+  };
+  dock();
+  requestAnimationFrame(dock);
+  setTimeout(dock, 50);
+  setTimeout(dock, 200);
+}
+
 function _bindEvents() {
-  // Clicking anywhere in the email section header opens the popup
+  // Clicking anywhere in the email section header opens the right-side pane
   // (except the compose button which has its own handler)
   const section = document.getElementById('email-section');
   const header = section?.querySelector('.section-header-flex');
@@ -268,6 +285,7 @@ function _bindEvents() {
     header.addEventListener('click', (e) => {
       if (e.target.closest('#email-compose-btn')) return;
       openEmailLibrary();
+      _dockEmailLibraryRight();
       markInboxAsSeen();
     });
   }

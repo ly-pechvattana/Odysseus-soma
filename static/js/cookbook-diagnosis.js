@@ -652,19 +652,6 @@ export const ERROR_PATTERNS = [
   },
   {
     pattern: /Either a revision or a version must be specified|transformers\.integrations\.hub_kernels|kernels\/layer/i,
-<<<<<<< HEAD
-    message: 'vLLM/Transformers kernel package mismatch.',
-    fixes: [
-      { label: 'Update vLLM/Transformers/kernels', action: (panel) => {
-        const taskEl = panel.closest('.cookbook-task');
-        const task = taskEl ? _loadTasks().find(t => t.sessionId === taskEl.dataset.taskId) : null;
-        const host = task?.remoteHost || '';
-        const prefix = _buildEnvPrefix();
-        const pipCmd = prefix ? prefix + ' python3 -m pip install -U vllm transformers kernels' : 'python3 -m pip install -U vllm transformers kernels';
-        const cmd = host ? _sshCmd(host, pipCmd) : pipCmd;
-        _launchServeTask('update-vllm-stack', 'pip-update', cmd);
-      }},
-=======
     message: 'Transformers/kernels package mismatch.',
     fixes: [
       { label: 'Repair kernel package', action: () => {
@@ -673,7 +660,6 @@ export const ERROR_PATTERNS = [
         _launchServeTask('repair-kernels', 'pip-update', `${_vp} -m pip install --user --break-system-packages "kernels<0.15"`);
       }},
       { label: 'Open Dependencies', action: () => _openCookbookDependencies('sglang') },
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
     ],
   },
   {
@@ -726,12 +712,6 @@ export const ERROR_PATTERNS = [
     ],
   },
   {
-<<<<<<< HEAD
-    pattern: /No module named ['"]?torch|No module named ['"]?diffusers|diffusers.*command not found/i,
-    message: 'Diffusion serving needs PyTorch and diffusers. Install diffusers from Cookbook → Dependencies.',
-    fixes: [
-      { label: 'Copy install command', action: () => _copyText('python3 -m pip install "diffusers[torch]"') },
-=======
     pattern: /Windows Error 0xc000001d|Illegal instruction|0xc000001d/i,
     message: 'AVX2 Instruction Set Mismatch: the precompiled llama-cpp-python wheel requires CPU features (AVX2/FMA) that your processor or virtual machine lacks.',
     suggestion: 'Suggested action: switch this serve config to Ollama (highly recommended, has dynamic CPU fallbacks), or choose a remote Linux GPU server.',
@@ -755,7 +735,6 @@ export const ERROR_PATTERNS = [
     fixes: [
       { label: 'Open Dependencies', action: () => _openCookbookDependencies('diffusers') },
       { label: 'Copy install command', action: () => _copyText('python3 -m pip install "diffusers[torch]" torchvision accelerate scipy python-multipart') },
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
     ],
   },
   {

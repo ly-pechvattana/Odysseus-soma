@@ -9,7 +9,7 @@ import uiModule from './ui.js';
 import sessionModule from './sessions.js';
 import spinnerModule from './spinner.js';
 import markdownModule from './markdown.js';
-import { makeWindowDraggable } from './windowDrag.js';
+import { makeWindowDraggable } from './windowDrag.js?v=20260801closefix';
 import { langIcon } from './langIcons.js';
 import { registerMenuDismiss, dismissOrRemove } from './escMenuStack.js';
 
@@ -1797,7 +1797,7 @@ let _libraryArchivedView = false;   // Documents tab showing archived docs?
           content,
           header,
           fsClass: FS_CLASS,
-          skipSelector: '.modal-close',
+          skipSelector: '.close-btn, .modal-close',
           onEnterFullscreen: enterFullscreen,
           onExitFullscreen: exitFullscreen,
           enableFullscreen: false,

@@ -64,7 +64,13 @@ export function makeWindowDraggable(modal, options = {}) {
   const enableFullscreen = false;
   const onDragEnd = options.onDragEnd || null;
   const onDragStart = options.onDragStart || null;
-  const skipSelector = options.skipSelector || 'button, input, select';
+  // Always protect window controls from header dragging. Some callers pass
+  // a custom selector; include the standard close/minimize buttons anyway so
+  // clicking X cannot move the window instead of closing it.
+  const skipSelector = [
+    'button', 'input', 'select', '.close-btn', '.modal-close',
+    options.skipSelector,
+  ].filter(Boolean).join(', ');
   const mobileSkip = (typeof options.mobileSkip === 'number') ? options.mobileSkip : 768;
   const enableTouch = options.enableTouch !== false;
   const enableDock = options.enableDock !== false && !!modal;

@@ -38,6 +38,9 @@ function _hasOtherDockedWindow(side, owner) {
   const cls = _dockClassForSide(side);
   return Array.from(document.querySelectorAll(`.${cls}`)).some((el) => {
     if (!el || el === owner) return false;
+    // A minimized docked window keeps its geometry so it can restore in place,
+    // but it must not keep the chat workspace compressed while hidden.
+    if (el.classList.contains('hidden') || el.classList.contains('modal-minimized')) return false;
     if (owner && el.contains && el.contains(owner)) return false;
     if (owner && owner.contains && owner.contains(el)) return false;
     return true;

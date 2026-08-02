@@ -1317,11 +1317,6 @@ def setup_shell_routes() -> APIRouter:
                 "install_hint": "Requires a native Apple Silicon Mac with Apple Foundational Models support. Installable via Homebrew on supported Macs.",
             },
             # ── Image ── editor + diffusion model serving
-<<<<<<< HEAD
-            {"name": "diffusers", "pip": "diffusers[torch]", "desc": "Image generation pipelines (SD, Flux) with PyTorch", "category": "Image", "target": "remote"},
-            {"name": "rembg", "pip": "rembg[gpu]", "desc": "AI background removal for image editor", "category": "Image", "target": "local"},
-            {"name": "realesrgan", "pip": "realesrgan", "desc": "AI denoise + upscale (Real-ESRGAN). Used by editor's Denoise and Upscale tools.", "category": "Image", "target": "local"},
-=======
             {
                 "name": "diffusers",
                 "pip": "diffusers[torch] torchvision accelerate scipy python-multipart",
@@ -1401,7 +1396,6 @@ def setup_shell_routes() -> APIRouter:
                 "category": "Image",
                 "target": "local",
             },
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
             # ── Tools ──
             {
                 "name": "playwright",
@@ -1777,11 +1771,6 @@ def setup_shell_routes() -> APIRouter:
             return {"ok": False, "error": "No package specified"}
         # Validate against known packages to prevent arbitrary pip install
         known = {
-<<<<<<< HEAD
-            "rembg[gpu]", "hf_transfer", "llama-cpp-python[server]", "sglang[all]", "diffusers", "diffusers[torch]",
-            "TTS", "bark", "faster-whisper", "playwright", "realesrgan", "gfpgan",
-            "insightface", "onnxruntime-gpu", "onnxruntime", "hdbscan",
-=======
             "rembg[gpu]",
             "hf_transfer",
             "llama-cpp-python[server]",
@@ -1805,7 +1794,6 @@ def setup_shell_routes() -> APIRouter:
             "hdbscan",
             "vllm",
             "mlx-lm",
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
         }
         if pip_name not in known:
             return {"ok": False, "error": f"Unknown package: {pip_name}"}

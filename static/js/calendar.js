@@ -4,9 +4,10 @@
 
 import uiModule from './ui.js';
 import spinnerModule from './spinner.js';
-import * as Modals from './modalManager.js';
+import * as Modals from './modalManager.js?v=20260801soma6';
 import { topPortalZ } from './toolWindowZOrder.js';
 import { makeWindowDraggable } from './windowDrag.js';
+import { applyEdgeDock } from './modalSnap.js';
 import { attachColorPicker } from './colorPicker.js';
 import { bindMenuDismiss } from './escMenuStack.js';
 import {
@@ -693,6 +694,12 @@ function _getModal() {
     }
   }
   return _modal;
+}
+
+function _dockCalendarRight(modal = document.getElementById('calendar-modal')) {
+  if (window.innerWidth <= 768 || !modal) return;
+  modal.classList.remove('modal-left-docked');
+  try { applyEdgeDock(modal, 'right'); } catch (_) {}
 }
 
 // ── Render dispatch ──
@@ -3478,16 +3485,19 @@ function _wheelNav(e) {
 }
 
 function openCalendar() {
-  if (_open) return;
   // If currently minimized — restore in place, preserve all state
   if (Modals.isMinimized('calendar-modal')) {
     Modals.restore('calendar-modal');
     _open = true;
+    _dockCalendarRight();
     return;
   }
+  if (_open) return;
   _open = true;
   if (_todayCount() > 0) { _markBadgeSeen(); _updateBadge(); }
-  _collapseSidebar();
+  // Desktop keeps the sidebar visible while Calendar occupies the right
+  // workspace column, matching Notes and Email. Mobile still uses the sheet.
+  if (window.innerWidth <= 768) _collapseSidebar();
   const modal = _getModal();
   // Clean up any leftover state from a previous swipe-dismiss
   modal.classList.remove('hidden', 'modal-minimized');
@@ -3506,6 +3516,8 @@ function openCalendar() {
     closeFn: () => _doCloseCalendar(),
     restoreFn: () => {},
   });
+  _dockCalendarRight(modal);
+  requestAnimationFrame(() => _dockCalendarRight(modal));
   _currentDate = new Date();
   _selectedDay = _today();  // auto-show today's events on open
   _view = 'month';

@@ -34,8 +34,6 @@ def _message_timestamp_iso(value: Optional[datetime]) -> Optional[str]:
     return value.isoformat().replace("+00:00", "Z")
 
 
-<<<<<<< HEAD
-=======
 def _parse_msg_content(raw):
     """Parse message content from DB — deserialises JSON arrays back to lists
     (multimodal content with image/audio attachments)."""
@@ -62,7 +60,6 @@ def _parse_msg_content(raw):
     return raw
 
 
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
 class SessionManager:
     """
     Manages chat sessions with database persistence.
@@ -252,22 +249,15 @@ class SessionManager:
             if message.metadata is None:
                 message.metadata = {}
             message.metadata.setdefault('timestamp', _message_timestamp_iso(msg_time))
-<<<<<<< HEAD
-=======
             # Multimodal content may contain provider data URLs for the live
             # model call. Persist only readable text plus attachment references
             # so chat_messages/FTS do not duplicate upload bytes.
             _content = persistable_message_content(message.content, message.metadata)
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
             db_message = DbChatMessage(
                 id=msg_id,
                 session_id=session_id,
                 role=message.role,
-<<<<<<< HEAD
-                content=message.content,
-=======
                 content=_content,
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
                 meta_data=json.dumps(message.metadata) if message.metadata else None,
                 timestamp=msg_time,
             )

@@ -547,11 +547,6 @@ def setup_cookbook_routes() -> APIRouter:
                 [{"label": "install llama.cpp dependencies or llama-cpp-python[server]", "op": "dependency", "package": "llama-cpp-python[server]"}],
             ),
             (
-<<<<<<< HEAD
-                r"No module named 'torch'|No module named torch|No module named 'diffusers'|No module named diffusers",
-                "Diffusion serving requires PyTorch and diffusers.",
-                [{"label": "install diffusers[torch] in Cookbook Dependencies", "op": "dependency", "package": "diffusers[torch]"}],
-=======
                 r"No GGUF found on this host|no \.gguf file|No GGUF file found",
                 "No GGUF file found for this model on this host. The llama.cpp backend needs a .gguf file.",
                 [{"label": "download a GGUF build of this model (repo name usually ends in -GGUF, file like Q4_K_M.gguf)", "op": "manual"}],
@@ -560,7 +555,6 @@ def setup_cookbook_routes() -> APIRouter:
                 r"No module named 'torch'|No module named torch|No module named 'torchvision'|No module named torchvision|No module named 'diffusers'|No module named diffusers|No module named 'scipy'|No module named scipy|install scipy if you want to use beta sigmas|requires the Torchvision library",
                 "Diffusion serving requires PyTorch, Torchvision, Diffusers, Accelerate, and SciPy.",
                 [{"label": "install Diffusers image deps in Cookbook Dependencies", "op": "dependency", "package": "diffusers[torch] torchvision accelerate scipy python-multipart"}],
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
             ),
             (
                 r"403 Forbidden|401 Unauthorized|Access to model.*is restricted|gated repo|not in the authorized list|awaiting a review",
@@ -2645,12 +2639,6 @@ def setup_cookbook_routes() -> APIRouter:
                 runner_lines.append('  echo "ERROR: Diffusion serving requires PyTorch + Torchvision + diffusers in the launch Python: $ODYSSEUS_DIFFUSION_CMD_PY."')
                 runner_lines.append('  printf "%s\\n" "$ODYSSEUS_DIFFUSION_IMPORT_ERROR"')
                 runner_lines.append('  ODYSSEUS_PREFLIGHT_EXIT=127')
-                runner_lines.append('fi')
-            elif "scripts/diffusion_server.py" in req.cmd or ".diffusion_server.py" in req.cmd:
-                runner_lines.append('export PATH="$HOME/.local/bin:$PATH"')
-                runner_lines.append('if ! python3 -c "import torch, diffusers" 2>/dev/null; then')
-                runner_lines.append('  echo "ERROR: Diffusion serving requires PyTorch + diffusers. Open Cookbook -> Dependencies and install diffusers on this server, then launch again."')
-                runner_lines.append('  exit 127')
                 runner_lines.append('fi')
 
             handled_ollama_sidecar_probe = False

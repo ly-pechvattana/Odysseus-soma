@@ -29,6 +29,9 @@ export const THEMES = {
                             inputBg: '#2f2f2f', brandColor: '#ffffff', brandMixTo: '#ffffff' } },
   claude:     { bg:'#262624', fg:'#f5f4f0', panel:'#30302e', border:'#4a4a47', red:'#c6613f' },
   cute:       { bg:'#fff0f5', fg:'#d4608a', panel:'#fff8fa', border:'#f0c0d0', red:'#ff6b9d' },
+  Rei:        { bg:'#101b2b', fg:'#b8d7ff', panel:'#0a1220', border:'#557aa8', red:'#6ea8ff' },
+  Asuka:      { bg:'#24100d', fg:'#ffd2b8', panel:'#170a08', border:'#a8422c', red:'#ff5a36' },
+  Shinji:     { bg:'#17151e', fg:'#d8d0e8', panel:'#0e0d13', border:'#5d5473', red:'#8e7bb5' },
 };
 
 const DEFAULT_THEME = 'dark';
@@ -59,6 +62,9 @@ const THEME_DEFAULT_PATTERN = {
   organs:     'rain',
   ume:        'petals',
   cute:       'sparkles',
+  Rei:        'rain',
+  Asuka:      'embers',
+  Shinji:     'synapse',
 };
 
 // Default effect colors for specific themes (overrides --fg)
@@ -67,6 +73,9 @@ const THEME_DEFAULT_EFFECT_COLOR = {
   organs:     '#451616',
   cute:       '#ff8cb8',
   ume:        '#f5a0c0',
+  Rei:        '#6ea8ff',
+  Asuka:      '#ff5a36',
+  Shinji:     '#8e7bb5',
 };
 
 // Default effect intensity (0..1) per theme. Any theme not listed defaults to 1.
@@ -74,6 +83,9 @@ const THEME_DEFAULT_INTENSITY = {
   midnight:   0.5,
   terminal:   0.8,
   organs:     0.65,
+  Rei:        0.45,
+  Asuka:      0.75,
+  Shinji:     0.6,
 };
 
 // Default frosted-glass state per theme. Themes not listed default to false.

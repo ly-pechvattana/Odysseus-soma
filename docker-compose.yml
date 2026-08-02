@@ -2,11 +2,7 @@ services:
   odysseus:
     build: .
     ports:
-<<<<<<< HEAD
-      - "${APP_PORT:-7000}:7000"
-=======
       - "${APP_BIND:-127.0.0.1}:${APP_PORT:-7000}:7000"
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
     volumes:
       - ${APP_DATA_DIR:-./data}:/app/data:z
       - ${APP_LOGS_DIR:-./logs}:/app/logs:z
@@ -15,19 +11,11 @@ services:
       - ${APP_DATA_DIR:-./data}/ssh:/app/.ssh:z
       # Cookbook local model cache. Inside Docker, "Local" means the Odysseus
       # container, so persist its HuggingFace cache under ./data/huggingface.
-<<<<<<< HEAD
-      - ./data/huggingface:/app/.cache/huggingface
-      # Cookbook-installed Python CLIs/packages (vLLM, llama-cpp-python, etc.)
-      # land under /app/.local for the odysseus user. Persist them so a
-      # container recreate does not silently remove installed serve engines.
-      - ./data/local:/app/.local
-=======
       - ${APP_DATA_DIR:-./data}/huggingface:/app/.cache/huggingface:z
       # Cookbook-installed Python CLIs/packages (vLLM, llama-cpp-python, etc.)
       # land under /app/.local for the odysseus user. Persist them so a
       # container recreate does not silently remove installed serve engines.
       - ${APP_DATA_DIR:-./data}/local:/app/.local:z
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
     extra_hosts:
       # Lets the container reach local services on the Docker host, including
       # Ollama at http://host.docker.internal:11434.
@@ -103,16 +91,12 @@ services:
     restart: unless-stopped
 
   searxng:
-<<<<<<< HEAD
-    image: docker.io/searxng/searxng:latest
-=======
     # Pinned, not :latest — odysseus waits on searxng's healthcheck
     # (depends_on: condition: service_healthy), so a broken upstream `latest`
     # tag blocks the whole app from starting. 2026.6.2 crashes on boot with
     # `KeyError: 'default_doi_resolver'`, failing the healthcheck (issue #1414).
     # Bump this deliberately after verifying a newer tag boots clean.
     image: docker.io/searxng/searxng:2026.5.31-7159b8aed
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
     entrypoint:
       - /bin/sh
       - -c

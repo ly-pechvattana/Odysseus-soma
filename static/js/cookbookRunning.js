@@ -3561,14 +3561,11 @@ async function _reconnectTask(el, task) {
             if (info.status === 'ready' && !task._serveReady) {
               task._serveReady = true;
               _updateTask(task.sessionId, { _serveReady: true });
-<<<<<<< HEAD
-=======
               // The auto-registered endpoint was marked offline while the
               // server was coming up. Now that it's reachable, nudge the
               // picker to re-probe so the offline pill clears without the
               // user having to reopen Settings or refresh the page.
               try { _refreshModelsAfterEndpointChange(); } catch (_) {}
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
             }
             if (info.phase) {
               badge.textContent = info.phase;

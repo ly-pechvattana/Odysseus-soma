@@ -177,7 +177,7 @@ let _dockPos = null; // { left, top } | null
 const _renderedChipIds = new Set();
 
 // ── Persistence (mobile dock + free-chip positions) ──
-const _DOCK_STORAGE_KEY = 'odysseus.mobileDockState.v1';
+const _DOCK_STORAGE_KEY = 'odysseus.mobileDockState.v2';
 let _dockStateLoaded = false;
 
 function _saveDockState() {
@@ -232,12 +232,13 @@ function _loadDockState() {
 // render because the empty-dock branch wipes inline styles via cssText='',
 // which would otherwise drop the position the moment the dock clears.
 function _applyDockPos(dock) {
-  if (!_dockPos) return;
-  dock.style.left = `${_dockPos.left}px`;
-  dock.style.top = `${_dockPos.top}px`;
-  dock.style.right = 'auto';
-  dock.style.bottom = 'auto';
-  dock.style.transform = 'none';
+  // Minimized tools use a fixed right-edge tab bar; ignore legacy floating
+  // positions from earlier dock versions.
+  dock.style.removeProperty('left');
+  dock.style.removeProperty('top');
+  dock.style.removeProperty('right');
+  dock.style.removeProperty('bottom');
+  dock.style.removeProperty('transform');
 }
 
 // True when `chipRect` is close enough to the dock's current location that
@@ -370,9 +371,24 @@ function _renderDock() {
       <span class="minimized-dock-label">${meta.label}</span>
       <span class="minimized-dock-x" title="Close">×</span>
     `;
+    // Keep the close control separate from the chip toggle/drag behavior.
+    // Otherwise a click on X can bubble into the chip and make the tab jump
+    // before (or instead of) closing the modal.
+    const chipClose = chip.querySelector('.minimized-dock-x');
+    if (chipClose) {
+      chipClose.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      chipClose.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        close(id);
+      });
+    }
     chip.addEventListener('click', (e) => {
       if (chip._wasDragging) { chip._wasDragging = false; return; }
-      if (e.target.classList.contains('minimized-dock-x')) {
+      if (e.target.closest?.('.minimized-dock-x')) {
         e.stopPropagation();
         close(id);
         return;
@@ -387,7 +403,9 @@ function _renderDock() {
         restore(id);
       }
     });
-    _wireChipDrag(chip, dock);
+    // Minimized tabs are a fixed bottom-right bar. Do not attach the legacy
+    // drag physics here: dragging the chip while trying to press its close X
+    // made the tab jump to an arbitrary viewport position.
     // Visually mark whether the modal is currently open (chip-active) so
     // the user can see at a glance which floating chip belongs to the
     // visible modal.
@@ -396,16 +414,7 @@ function _renderDock() {
     // Free-positioned chips on mobile live OUTSIDE the dock so the dock's
     // transform: translateX(-50%) doesn't shift their `position: fixed`
     // coords. Dock-resident chips render as normal flex children.
-    const pos = _chipPositions.get(id);
-    if (pos && window.innerWidth <= 768) {
-      chip.style.setProperty('position', 'fixed', 'important');
-      chip.style.setProperty('left', `${pos.left}px`, 'important');
-      chip.style.setProperty('top', `${pos.top}px`, 'important');
-      chip.style.setProperty('z-index', '10020', 'important');
-      document.body.appendChild(chip);
-    } else {
-      dock.appendChild(chip);
-    }
+    dock.appendChild(chip);
   }
 
   // FLIP: animate from old → new positions

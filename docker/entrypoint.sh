@@ -110,12 +110,6 @@ done
 # Auto-set CUDA_HOME if a pip-installed nvcc is present, and disable the
 # FlashInfer JIT sampler — sampler only, no impact on attention path.
 # No-op when vllm isn't installed.
-<<<<<<< HEAD
-for cu in /app/.local/lib/python*/site-packages/nvidia/cu13; do
-    if [ -x "$cu/bin/nvcc" ]; then
-        export CUDA_HOME="$cu"
-        export VLLM_USE_FLASHINFER_SAMPLER="${VLLM_USE_FLASHINFER_SAMPLER:-0}"
-=======
 #
 # Checked layouts (all are real pip-wheel install paths):
 #   nvidia/cu13        — nvidia-nvcc-cu13 (CUDA 13.x wheel style)
@@ -127,13 +121,10 @@ for cu in \
     /app/.local/lib/python*/site-packages/nvidia/cuda_nvcc; do
     if [ -x "$cu/bin/nvcc" ]; then
         export CUDA_HOME="$cu"
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
         break
     fi
 done
 
-<<<<<<< HEAD
-=======
 # Disable the FlashInfer JIT sampler unconditionally — it is sampler-only
 # and has no impact on the attention path, but requires nvcc + matching
 # CUDA headers at startup. Without this, vLLM crashes with "Could not find
@@ -149,7 +140,6 @@ export PATH="/app/.local/bin:$PATH"
 # || true so a setup failure never prevents the container from starting.
 "$GOSU_BIN" "$ODY_USER" "$PYTHON_BIN" /app/setup.py || true
 
->>>>>>> cf4e240ad1622da6a904f496b19d656a2b9c6393
 # Drop root and run the actual app. `gosu` is preferred over `su` /
 # `sudo` because it cleans up the process tree (no extra shell layer)
 # so signals (SIGTERM from `docker stop`) reach uvicorn directly.
