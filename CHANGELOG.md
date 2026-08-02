@@ -1,4 +1,4 @@
-# What's Different
+# Changelog
 
 This fork adapts Odysseus into a student-focused study assistant and academic productivity workspace.
 
