@@ -3,8 +3,10 @@
 </p>
 
 <p align="center">
-  A self-hosted AI workspace for chat, agents, research, documents, email, notes, calendar, and local model workflows.
+  A remodel of Pewdiepie's Odysseus, redesigned to suit students needs for self-hosted AI workspace for chat, agents, research, documents, email, notes, calendar, and local model workflows.
 </p>
+
+> This repo is forked from Pewdiepie's [Odysseus](https://github.com/pewdiepie-archdaemon/odysseus). Maintain by LY Pechvattana
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> ·
@@ -12,8 +14,6 @@
   <a href="docs/what-is-different.md">What's Different</a> ·
   <a href="ROADMAP.md">Roadmap</a>
 </p>
-
-> This repo is forked from Pewdiepie's [Odysseus](https://github.com/pewdiepie-archdaemon/odysseus). Maintain by LY P
 
 <p align="center">
   <a href="https://repology.org/project/odysseus-ai/versions"><img src="https://repology.org/badge/vertical-allrepos/odysseus-ai.svg" alt="Packaging status"></a>
